@@ -17,7 +17,7 @@ export default function StartScreen(): JSX.Element {
         <Text style={styles.title}>Let's Get Started!</Text>
 
         <Text style={styles.subtitle}>
-          Join EcoPurok and help keep our community clean through proper waste management
+          Join BasuraSmart and help keep our community clean through proper waste management
         </Text>
 
         <TouchableOpacity
