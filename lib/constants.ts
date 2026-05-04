@@ -1,4 +1,4 @@
-import type { Route, Reminder, PickupSchedule, WasteType, Reward, Announcement, CollectorIssueType } from "./types";
+import type { Route, Reminder, PickupSchedule, WasteType, Reward, Announcement, CollectorIssueType, Report } from "./types";
 
 export const COLORS = {
   primary: {
@@ -47,6 +47,7 @@ export const PUROK_LIST = [
 export const USER_TYPES = [
   { value: "resident", label: "Resident" },
   { value: "collector", label: "Garbage Collector" },
+  { value: "admin", label: "Barangay Official" },
 ] as const;
 
 export const WASTE_TYPES: Record<WasteType, { label: string; color: string }> = {
@@ -195,5 +196,48 @@ export const MOCK_ANNOUNCEMENTS: Announcement[] = [
     message: "Starting next Monday, collection hours will change to 7:00 AM - 12:00 PM.",
     type: "general",
     createdAt: "2026-05-02T09:00:00Z",
+  },
+];
+
+export const MOCK_REPORTS: Report[] = [
+  {
+    id: "1",
+    userId: "1",
+    purok: "Purok 3",
+    description: "Illegal dumping near the canal - old furniture and bags",
+    status: "pending",
+    createdAt: "2026-05-05T10:00:00Z",
+  },
+  {
+    id: "2",
+    userId: "1",
+    purok: "Purok 5",
+    description: "Household waste dumped on street corner",
+    status: "investigating",
+    createdAt: "2026-05-04T14:00:00Z",
+  },
+  {
+    id: "3",
+    userId: "1",
+    purok: "Purok 1",
+    description: " construction materials left on sidewalk",
+    status: "resolved",
+    createdAt: "2026-05-03T09:00:00Z",
+  },
+  {
+    id: "4",
+    userId: "1",
+    purok: "Purok 7",
+    description: "Plastic bottles and bags along the road",
+    status: "pending",
+    createdAt: "2026-05-05T08:30:00Z",
+  },
+  {
+    id: "5",
+    userId: "1",
+    purok: "Purok 2",
+    description: "Old appliances dumped behind the shop",
+    status: "resolved",
+    createdAt: "2026-05-02T11:00:00Z",
   },
 ];

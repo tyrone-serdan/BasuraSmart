@@ -20,6 +20,7 @@ export default function RootLayout() {
         <Stack.Screen name="(auth)/details" />
         <Stack.Screen name="(resident)" />
         <Stack.Screen name="(collector)/route" />
+        <Stack.Screen name="(admin)" />
       </Stack>
     </SafeAreaProvider>
   );

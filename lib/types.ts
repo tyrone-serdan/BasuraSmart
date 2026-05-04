@@ -1,4 +1,4 @@
-export type UserType = "resident" | "collector";
+export type UserType = "resident" | "collector" | "admin";
 
 export type WasteType = "biodegradable" | "non-biodegradable" | "recyclables";
 

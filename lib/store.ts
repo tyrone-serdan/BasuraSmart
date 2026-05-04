@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import type { User, AuthState, Route, CalendarDay, PickupSchedule, Report, ReportStatus, PointsTransaction, Reward, Announcement, CollectorIssue } from "./types";
-import { MOCK_ROUTE, MOCK_PICKUP_SCHEDULE, REWARDS, MOCK_ANNOUNCEMENTS } from "./constants";
+import { MOCK_ROUTE, MOCK_PICKUP_SCHEDULE, REWARDS, MOCK_ANNOUNCEMENTS, MOCK_REPORTS, USER_TYPES } from "./constants";
 
 interface AuthStore extends AuthState {
   login: (user: User) => void;
@@ -34,7 +34,7 @@ interface AppStore {
   currentGuideIndex: number;
   setGuideIndex: (index: number) => void;
 
-reports: Report[];
+  reports: Report[];
   addReport: (report: Report) => void;
   updateReportStatus: (reportId: string, status: ReportStatus) => void;
   setReports: (reports: Report[]) => void;
@@ -208,7 +208,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
   currentGuideIndex: 0,
   setGuideIndex: (index: number) => set({ currentGuideIndex: index }),
 
-  reports: [],
+  reports: MOCK_REPORTS,
   addReport: (report: Report) =>
     set((state) => ({
       reports: [report, ...state.reports],

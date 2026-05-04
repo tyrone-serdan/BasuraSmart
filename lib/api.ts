@@ -28,6 +28,18 @@ const MOCK_USERS: Record<string, { password: string; user: User }> = {
       points: 0,
     },
   },
+  "admin": {
+    password: "admin123",
+    user: {
+      id: "3",
+      name: "Admin User",
+      email: "admin@basurasmart.com",
+      phone: "09111222333",
+      purok: "Barangay Hall",
+      userType: "admin",
+      points: 0,
+    },
+  },
 };
 
 export async function registerUser(data: RegisterData): Promise<ApiResponse<{ phone: string }>> {

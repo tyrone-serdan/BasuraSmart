@@ -35,7 +35,8 @@ export default function DetailsScreen(): JSX.Element {
       const response = await api.saveUserDetails("new-user-id", { purok, userType: userType as UserType });
       if (response.success && response.data) {
         login(response.data);
-        if (userType === "collector") router.replace("/(collector)/route");
+        if (userType === "admin") router.replace("/(admin)/dashboard");
+        else if (userType === "collector") router.replace("/(collector)/route");
         else router.replace("/(resident)/home");
       } else {
         Alert.alert("Error", response.error || "Failed to save details");
@@ -57,7 +58,8 @@ export default function DetailsScreen(): JSX.Element {
       userType: (userType as UserType) || "resident",
       points: 0,
     });
-    if (userType === "collector" || userType === "") router.replace("/(collector)/route");
+    if (userType === "admin") router.replace("/(admin)/dashboard");
+    else if (userType === "collector" || userType === "") router.replace("/(collector)/route");
     else router.replace("/(resident)/home");
   };
 

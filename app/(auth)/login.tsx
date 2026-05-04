@@ -36,7 +36,9 @@ export default function LoginScreen(): JSX.Element {
 
       if (response.success && response.data) {
         login(response.data);
-        if (response.data.userType === "collector") {
+        if (response.data.userType === "admin") {
+          router.replace("/(admin)/dashboard");
+        } else if (response.data.userType === "collector") {
           router.replace("/(collector)/route");
         } else {
           router.replace("/(resident)/home");
