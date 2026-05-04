@@ -18,8 +18,25 @@ export default function CollectorRouteScreen(): JSX.Element {
   const pendingStops = currentRoute?.stops.filter(s => s.status === "pending") || [];
   const completedStops = currentRoute?.stops.filter(s => s.status === "completed") || [];
 
-  const handleStopComplete = (stopId: string) => {
-    completeStop(stopId);
+  const handleStopComplete = (stopId: string, purok: string) => {
+    Alert.alert(
+      "Confirm Segregation",
+      `Did residents at ${purok} properly segregate their waste?`,
+      [
+        { text: "No", style: "cancel", onPress: () => completeStop(stopId) },
+        {
+          text: "Yes",
+          onPress: () => {
+            completeStop(stopId);
+            Alert.alert(
+              "Points Awarded!",
+              `+20 points have been awarded to all residents in ${purok} for proper segregation!`,
+              [{ text: "OK" }]
+            );
+          },
+        },
+      ]
+    );
   };
 
   const handleCompleteAll = async () => {
@@ -71,7 +88,7 @@ export default function CollectorRouteScreen(): JSX.Element {
               {pendingStops.map((stop, index) => {
                 const originalIndex = currentRoute?.stops.findIndex(s => s.id === stop.id) ?? 0;
                 return (
-                  <Card key={stop.id} variant="elevated" style={styles.stopCard} onPress={() => handleStopComplete(stop.id)}>
+                  <Card key={stop.id} variant="elevated" style={styles.stopCard} onPress={() => handleStopComplete(stop.id, stop.purok)}>
                     <View style={styles.stopContent}>
                       <View style={styles.stopNumber}>
                         <Text style={styles.stopNumberText}>{originalIndex + 1}</Text>
@@ -81,7 +98,7 @@ export default function CollectorRouteScreen(): JSX.Element {
                         <Text style={styles.stopAddress}>{stop.address}</Text>
                         {stop.wasteType && <Text style={styles.stopWaste}>{getWasteTypeLabel(stop.wasteType)}</Text>}
                       </View>
-                      <TouchableOpacity onPress={() => handleStopComplete(stop.id)} style={styles.doneButton}>
+                      <TouchableOpacity onPress={() => handleStopComplete(stop.id, stop.purok)} style={styles.doneButton}>
                         <Text style={styles.doneButtonText}>Done</Text>
                       </TouchableOpacity>
                     </View>

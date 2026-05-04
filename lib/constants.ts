@@ -1,4 +1,4 @@
-import type { Route, Reminder, PickupSchedule, WasteType } from "./types";
+import type { Route, Reminder, PickupSchedule, WasteType, Reward, Announcement } from "./types";
 
 export const COLORS = {
   primary: {
@@ -134,3 +134,58 @@ export const MOCK_ROUTE: Route = {
 export const OTP_EXPIRATION_SECONDS = 60;
 
 export const DEMO_OTP = "123456";
+
+export const REWARDS: Reward[] = [
+  { id: "globe-5", network: "GLOBE", amount: 5, pointsCost: 20 },
+  { id: "globe-10", network: "GLOBE", amount: 10, pointsCost: 40 },
+  { id: "globe-15", network: "GLOBE", amount: 15, pointsCost: 60 },
+  { id: "globe-20", network: "GLOBE", amount: 20, pointsCost: 80 },
+  { id: "smart-5", network: "SMART", amount: 5, pointsCost: 20 },
+  { id: "smart-10", network: "SMART", amount: 10, pointsCost: 40 },
+  { id: "smart-15", network: "SMART", amount: 15, pointsCost: 60 },
+  { id: "smart-20", network: "SMART", amount: 20, pointsCost: 80 },
+  { id: "tnt-5", network: "TNT", amount: 5, pointsCost: 20 },
+  { id: "tnt-10", network: "TNT", amount: 10, pointsCost: 40 },
+  { id: "tnt-15", network: "TNT", amount: 15, pointsCost: 60 },
+  { id: "tnt-20", network: "TNT", amount: 20, pointsCost: 80 },
+];
+
+export const REWARD_NETWORKS = ["All", "GLOBE", "SMART", "TNT"] as const;
+
+export const ANNOUNCEMENT_TYPES: Record<string, { label: string; color: string }> = {
+  schedule_change: { label: "Schedule Change", color: "#f59e0b" },
+  weather: { label: "Weather Alert", color: "#3b82f6" },
+  general: { label: "General", color: "#6b7280" },
+  report_cleared: { label: "Report Cleared", color: "#22c55e" },
+};
+
+export const MOCK_ANNOUNCEMENTS: Announcement[] = [
+  {
+    id: "1",
+    title: "Your Report Has Been Addressed",
+    message: "Illegal dumping at Purok 3 main road has been cleared by barangay enforcement. Thank you for helping keep our community clean!",
+    type: "report_cleared",
+    createdAt: "2026-05-05T08:00:00Z",
+  },
+  {
+    id: "2",
+    title: "No Pickup Tomorrow",
+    message: "There will be no garbage collection tomorrow due to the local holiday. Collection will resume on Monday.",
+    type: "schedule_change",
+    createdAt: "2026-05-04T08:00:00Z",
+  },
+  {
+    id: "3",
+    title: "Heavy Rain Warning",
+    message: "Due to expected heavy rains, garbage collection may be delayed. Please keep your trash sealed and dry.",
+    type: "weather",
+    createdAt: "2026-05-03T10:00:00Z",
+  },
+  {
+    id: "4",
+    title: "New Schedule Starting",
+    message: "Starting next Monday, collection hours will change to 7:00 AM - 12:00 PM.",
+    type: "general",
+    createdAt: "2026-05-02T09:00:00Z",
+  },
+];

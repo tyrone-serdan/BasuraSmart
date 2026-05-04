@@ -10,6 +10,7 @@ export interface User {
   purok: string;
   userType: UserType;
   avatar?: string;
+  points: number;
 }
 
 export interface AuthState {
@@ -113,4 +114,38 @@ export interface CreateReportInput {
   photoUri?: string;
   latitude?: number;
   longitude?: number;
+}
+
+export type RewardNetwork = "GLOBE" | "SMART" | "TNT";
+
+export interface Reward {
+  id: string;
+  network: RewardNetwork;
+  amount: number;
+  pointsCost: number;
+}
+
+export interface PointsTransaction {
+  id: string;
+  amount: number;
+  type: "earned" | "redeemed";
+  description: string;
+  date: string;
+  rewardId?: string;
+}
+
+export interface UserPoints {
+  userId: string;
+  points: number;
+  pointsHistory: PointsTransaction[];
+}
+
+export type AnnouncementType = "schedule_change" | "weather" | "general" | "report_cleared";
+
+export interface Announcement {
+  id: string;
+  title: string;
+  message: string;
+  type: AnnouncementType;
+  createdAt: string;
 }

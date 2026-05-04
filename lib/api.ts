@@ -13,6 +13,7 @@ const MOCK_USERS: Record<string, { password: string; user: User }> = {
       phone: "09123456789",
       purok: "Purok 1 - Centro",
       userType: "resident",
+      points: 40,
     },
   },
   "collector": {
@@ -24,6 +25,7 @@ const MOCK_USERS: Record<string, { password: string; user: User }> = {
       phone: "09987654321",
       purok: "Purok 1 - Centro",
       userType: "collector",
+      points: 0,
     },
   },
 };
@@ -90,6 +92,7 @@ export async function saveUserDetails(userId: string, details: UserDetails): Pro
         phone: "09*********",
         purok: details.purok,
         userType: details.userType,
+        points: 0,
       };
       
       resolve({

@@ -35,6 +35,11 @@ export function SideMenu(): JSX.Element {
     router.push("/(resident)/report");
   };
 
+  const handleRewards = () => {
+    setMenuOpen(false);
+    router.replace("/(resident)/rewards" as any);
+  };
+
   const handleLogout = () => {
     setMenuOpen(false);
     logout();
@@ -63,6 +68,7 @@ export function SideMenu(): JSX.Element {
           <View style={styles.menuItems}>
             <MenuItem label="Edit User Details" onPress={handleEditDetails} />
             <MenuItem label="Report Illegal Dumping" onPress={handleReportDumping} />
+            <MenuItem label="Rewards" onPress={handleRewards} />
           </View>
 
           <MenuItem label="Log Out" onPress={handleLogout} isLogout />

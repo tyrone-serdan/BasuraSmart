@@ -5,8 +5,8 @@ import { Header, Card, Legend, SideMenu } from "@/components/ui";
 import { TrashBin, Bell } from "@/components/illustrations";
 import { useAppStore, useAuthStore } from "@/lib/store";
 import { COLORS, commonStyles } from "@/lib/styles";
-import { DAYS_OF_WEEK, MONTHS, WASTE_TYPES } from "@/lib/constants";
-import type { CalendarDay, WasteType } from "@/lib/types";
+import { DAYS_OF_WEEK, MONTHS, WASTE_TYPES, ANNOUNCEMENT_TYPES } from "@/lib/constants";
+import type { CalendarDay, WasteType, Announcement } from "@/lib/types";
 
 const SCREEN_WIDTH = Dimensions.get("window").width;
 const CALENDAR_PADDING = 24;
@@ -50,6 +50,8 @@ export default function ResidentHomeScreen(): JSX.Element {
     getScheduleForDate,
     isMenuOpen,
     setMenuOpen,
+    latestAnnouncement,
+    dismissAnnouncement,
   } = useAppStore();
 
   useEffect(() => {
@@ -91,6 +93,21 @@ export default function ResidentHomeScreen(): JSX.Element {
       />
 
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
+        {latestAnnouncement && (
+          <Card variant="elevated" style={styles.announcementCard}>
+            <View style={styles.announcementHeader}>
+              <View style={[styles.announcementBadge, { backgroundColor: ANNOUNCEMENT_TYPES[latestAnnouncement.type]?.color || "#f59e0b" }]}>
+                <Text style={styles.announcementBadgeText}>{ANNOUNCEMENT_TYPES[latestAnnouncement.type]?.label || "Announcement"}</Text>
+              </View>
+              <TouchableOpacity onPress={dismissAnnouncement} style={styles.dismissButton}>
+                <Text style={styles.dismissText}>✕</Text>
+              </TouchableOpacity>
+            </View>
+            <Text style={styles.announcementTitle}>{latestAnnouncement.title}</Text>
+            <Text style={styles.announcementMessage}>{latestAnnouncement.message}</Text>
+          </Card>
+        )}
+
         <View style={styles.monthNav}>
           <TouchableOpacity onPress={handlePrevMonth} style={styles.navButton}>
             <Text style={styles.navButtonText}>←</Text>
@@ -161,6 +178,43 @@ export default function ResidentHomeScreen(): JSX.Element {
 const styles = StyleSheet.create({
   scrollView: { flex: 1 },
   scrollContent: { padding: CALENDAR_PADDING, paddingBottom: 32 },
+  announcementCard: {
+    marginBottom: 16,
+  },
+  announcementHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  announcementBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+  },
+  announcementBadgeText: {
+    color: COLORS.white,
+    fontSize: 10,
+    fontWeight: "bold",
+  },
+  dismissButton: {
+    padding: 4,
+  },
+  dismissText: {
+    fontSize: 16,
+    color: COLORS.textSecondary,
+  },
+  announcementTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: COLORS.text,
+    marginBottom: 4,
+  },
+  announcementMessage: {
+    fontSize: 14,
+    color: COLORS.textSecondary,
+    lineHeight: 20,
+  },
   monthNav: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 16 },
   navButton: { padding: 8 },
   navButtonText: { color: COLORS.primary[600], fontSize: 20 },

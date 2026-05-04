@@ -55,6 +55,7 @@ export default function DetailsScreen(): JSX.Element {
       phone: "09*********",
       purok: purok || "Purok 1 - Centro",
       userType: (userType as UserType) || "resident",
+      points: 0,
     });
     if (userType === "collector" || userType === "") router.replace("/(collector)/route");
     else router.replace("/(resident)/home");

@@ -1,6 +1,6 @@
 import { create } from "zustand";
-import type { User, AuthState, Route, CalendarDay, PickupSchedule, Report, ReportStatus } from "./types";
-import { MOCK_ROUTE, MOCK_PICKUP_SCHEDULE } from "./constants";
+import type { User, AuthState, Route, CalendarDay, PickupSchedule, Report, ReportStatus, PointsTransaction, Reward, Announcement } from "./types";
+import { MOCK_ROUTE, MOCK_PICKUP_SCHEDULE, REWARDS, MOCK_ANNOUNCEMENTS } from "./constants";
 
 interface AuthStore extends AuthState {
   login: (user: User) => void;
@@ -8,6 +8,8 @@ interface AuthStore extends AuthState {
   setLoading: (loading: boolean) => void;
   setOtpSentTo: (phone: string | null) => void;
   updateUser: (updates: Partial<User>) => void;
+  addPoints: (points: number, description: string) => void;
+  redeemPoints: (points: number, reward: Reward, description: string) => boolean;
 }
 
 interface AppStore {
@@ -32,10 +34,13 @@ interface AppStore {
   currentGuideIndex: number;
   setGuideIndex: (index: number) => void;
 
-  reports: Report[];
+reports: Report[];
   addReport: (report: Report) => void;
   updateReportStatus: (reportId: string, status: ReportStatus) => void;
   setReports: (reports: Report[]) => void;
+
+  latestAnnouncement: Announcement | null;
+  dismissAnnouncement: () => void;
 }
 
 const generateCalendarDaysForMonth = (month: number, year: number): CalendarDay[] => {
@@ -76,7 +81,7 @@ const generateCalendarDaysForMonth = (month: number, year: number): CalendarDay[
   return days;
 };
 
-export const useAuthStore = create<AuthStore>((set) => ({
+export const useAuthStore = create<AuthStore>((set, get) => ({
   user: null,
   isAuthenticated: false,
   isLoading: false,
@@ -84,7 +89,7 @@ export const useAuthStore = create<AuthStore>((set) => ({
 
   login: (user: User) =>
     set({
-      user,
+      user: { ...user, points: 0 },
       isAuthenticated: true,
       isLoading: false,
     }),
@@ -107,6 +112,31 @@ export const useAuthStore = create<AuthStore>((set) => ({
     set((state) => ({
       user: state.user ? { ...state.user, ...updates } : null,
     })),
+
+  addPoints: (points: number, description: string) =>
+    set((state) => {
+      if (!state.user) return state;
+      return {
+        user: {
+          ...state.user,
+          points: state.user.points + points,
+        },
+      };
+    }),
+
+  redeemPoints: (points: number, reward: Reward, description: string) => {
+    const state = get();
+    if (!state.user || state.user.points < reward.pointsCost) {
+      return false;
+    }
+    set({
+      user: {
+        ...state.user,
+        points: state.user.points - reward.pointsCost,
+      },
+    });
+    return true;
+  },
 }));
 
 export const useAppStore = create<AppStore>((set, get) => ({
@@ -187,6 +217,9 @@ export const useAppStore = create<AppStore>((set, get) => ({
       ),
     })),
   setReports: (reports: Report[]) => set({ reports }),
+
+  latestAnnouncement: MOCK_ANNOUNCEMENTS[0] || null,
+  dismissAnnouncement: () => set({ latestAnnouncement: null }),
 }));
 
 useAppStore.getState().generateCalendarDays();

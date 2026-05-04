@@ -32,6 +32,7 @@ export default function ResidentLayout() {
     >
       <Stack.Screen name="home" />
       <Stack.Screen name="report" />
+      <Stack.Screen name="rewards" />
     </Stack>
   );
 }
