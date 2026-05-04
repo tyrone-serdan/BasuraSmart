@@ -4,7 +4,10 @@
     "slug": "basurasmart",
     "version": "1.0.0",
     "scheme": "basurasmart",
-    "platforms": ["ios", "android"],
+    "platforms": [
+      "ios",
+      "android"
+    ],
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
@@ -26,6 +29,14 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "6cea49e2-1edf-4d7b-9887-16df5059c5a5"
+      }
     }
   }
 }

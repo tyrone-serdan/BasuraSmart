@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { User, AuthState, Route, CalendarDay, PickupSchedule } from "./types";
+import type { User, AuthState, Route, CalendarDay, PickupSchedule, Report, ReportStatus } from "./types";
 import { MOCK_ROUTE, MOCK_PICKUP_SCHEDULE } from "./constants";
 
 interface AuthStore extends AuthState {
@@ -31,6 +31,11 @@ interface AppStore {
 
   currentGuideIndex: number;
   setGuideIndex: (index: number) => void;
+
+  reports: Report[];
+  addReport: (report: Report) => void;
+  updateReportStatus: (reportId: string, status: ReportStatus) => void;
+  setReports: (reports: Report[]) => void;
 }
 
 const generateCalendarDaysForMonth = (month: number, year: number): CalendarDay[] => {
@@ -169,6 +174,19 @@ export const useAppStore = create<AppStore>((set, get) => ({
 
   currentGuideIndex: 0,
   setGuideIndex: (index: number) => set({ currentGuideIndex: index }),
+
+  reports: [],
+  addReport: (report: Report) =>
+    set((state) => ({
+      reports: [report, ...state.reports],
+    })),
+  updateReportStatus: (reportId: string, status: ReportStatus) =>
+    set((state) => ({
+      reports: state.reports.map((r) =>
+        r.id === reportId ? { ...r, status } : r
+      ),
+    })),
+  setReports: (reports: Report[]) => set({ reports }),
 }));
 
 useAppStore.getState().generateCalendarDays();

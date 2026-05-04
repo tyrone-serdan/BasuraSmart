@@ -28,13 +28,20 @@ export const COLORS = {
 } as const;
 
 export const PUROK_LIST = [
-  "Purok 1 - Centro",
-  "Purok 2 - Upper",
-  "Purok 3 - Lower",
-  "Purok 4 - Hillside",
-  "Purok 5 - Riverside",
-  "Purok 6 - Beachside",
-  "Purok 7 - Town Proper",
+  "Purok 1",
+  "Purok 2",
+  "Purok 3",
+  "Purok 4",
+  "Purok 5",
+  "Purok 6",
+  "Purok 7",
+  "Purok 8",
+  "Purok 9",
+  "Purok 10",
+  "Purok 10-A",
+  "Purok 11",
+  "Purok 12",
+  "Purok 12-A",
 ] as const;
 
 export const USER_TYPES = [

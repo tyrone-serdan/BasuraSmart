@@ -1,4 +1,4 @@
-import type { User, ApiResponse, LoginCredentials, RegisterData, OtpVerification, UserDetails } from "./types";
+import type { User, ApiResponse, LoginCredentials, RegisterData, OtpVerification, UserDetails, CreateReportInput, Report, ReportStatus } from "./types";
 import { DEMO_OTP } from "./constants";
 
 const NETWORK_DELAY = 1000;
@@ -147,6 +147,73 @@ export async function getPickupSchedule(userId: string): Promise<ApiResponse<{ s
   });
 }
 
+export async function createReport(input: CreateReportInput): Promise<ApiResponse<Report>> {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      const newReport: Report = {
+        id: `report-${Date.now()}`,
+        userId: "current-user",
+        purok: input.purok,
+        description: input.description,
+        photoUri: input.photoUri,
+        latitude: input.latitude,
+        longitude: input.longitude,
+        status: "pending",
+        createdAt: new Date().toISOString(),
+      };
+
+      resolve({
+        success: true,
+        data: newReport,
+        message: "Report submitted successfully",
+      });
+    }, NETWORK_DELAY);
+  });
+}
+
+export async function getUserReports(userId: string): Promise<ApiResponse<Report[]>> {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve({
+        success: true,
+        data: [],
+        message: "Reports fetched",
+      });
+    }, NETWORK_DELAY);
+  });
+}
+
+export async function getAllReports(): Promise<ApiResponse<Report[]>> {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve({
+        success: true,
+        data: [],
+        message: "All reports fetched",
+      });
+    }, NETWORK_DELAY);
+  });
+}
+
+export async function updateReportStatus(reportId: string, status: ReportStatus): Promise<ApiResponse<Report>> {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve({
+        success: true,
+        data: {
+          id: reportId,
+          userId: "user-id",
+          purok: "Purok 1",
+          description: "Sample description",
+          status,
+          createdAt: new Date().toISOString(),
+        },
+        message: "Report status updated",
+      });
+    }, NETWORK_DELAY);
+  });
+}
+
 export const api = {
   registerUser,
   loginUser,
@@ -155,6 +222,10 @@ export const api = {
   getUserDetails,
   completePickup,
   getPickupSchedule,
+  createReport,
+  getUserReports,
+  getAllReports,
+  updateReportStatus,
 };
 
 export default api;

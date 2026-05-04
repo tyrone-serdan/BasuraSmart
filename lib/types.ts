@@ -92,3 +92,25 @@ export interface UserDetails {
   purok: string;
   userType: UserType;
 }
+
+export type ReportStatus = "pending" | "investigating" | "resolved";
+
+export interface Report {
+  id: string;
+  userId: string;
+  purok: string;
+  description: string;
+  photoUri?: string;
+  latitude?: number;
+  longitude?: number;
+  status: ReportStatus;
+  createdAt: string;
+}
+
+export interface CreateReportInput {
+  purok: string;
+  description: string;
+  photoUri?: string;
+  latitude?: number;
+  longitude?: number;
+}
