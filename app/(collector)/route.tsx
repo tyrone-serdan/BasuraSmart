@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, TouchableOpacity, ScrollView, Alert, StyleSheet, Dimensions } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { RouteMap } from "@/components/map";
@@ -13,14 +13,45 @@ const SCREEN_WIDTH = Dimensions.get("window").width;
 
 export default function CollectorRouteScreen(): JSX.Element {
   const { user } = useAuthStore();
-  const { currentRoute, completePickup, completeStop, isMenuOpen, setMenuOpen, addCollectorIssue } = useAppStore();
+  const { currentRoute, setCurrentRoute, completePickup, completeStop, isMenuOpen, setMenuOpen, addCollectorIssue } = useAppStore();
   const [isCompleting, setIsCompleting] = useState(false);
   const [showIssueForm, setShowIssueForm] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [issueForm, setIssueForm] = useState({
     purok: "",
     issueType: "" as CollectorIssueType | "",
     description: "",
   });
+
+  useEffect(() => {
+    console.log('[CollectorRoute] useEffect: Loading routes, user:', user?.email);
+    const loadRoutes = async () => {
+      setIsLoading(true);
+      try {
+        console.log('[CollectorRoute] loadRoutes: Calling API...');
+        const response = await api.getRoutes(user?.id);
+        console.log('[CollectorRoute] loadRoutes: Response:', response.success ? 'Success' : 'Failed');
+        
+        if (response.success && response.data && response.data.length > 0) {
+          console.log('[CollectorRoute] loadRoutes: Found', response.data.length, 'routes');
+          setCurrentRoute(response.data[0]);
+        } else {
+          console.log('[CollectorRoute] loadRoutes: No routes found or error:', response.error);
+        }
+      } catch (error) {
+        console.error('[CollectorRoute] loadRoutes: Error:', error);
+      } finally {
+        setIsLoading(false);
+        console.log('[CollectorRoute] loadRoutes: Complete');
+      }
+    };
+    
+    if (user?.id) {
+      loadRoutes();
+    } else {
+      console.log('[CollectorRoute] useEffect: No user.id, skipping load');
+    }
+  }, [user?.id]);
 
   const pendingStops = currentRoute?.stops.filter(s => s.status === "pending") || [];
   const completedStops = currentRoute?.stops.filter(s => s.status === "completed") || [];
@@ -50,8 +81,8 @@ export default function CollectorRouteScreen(): JSX.Element {
     setIsCompleting(true);
     
     try {
-      if (currentRoute) {
-        await api.completePickup(currentRoute.id);
+      if (currentRoute && user) {
+        await api.completePickup(currentRoute.id, user.id);
       }
       
       completePickup();

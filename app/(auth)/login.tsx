@@ -11,42 +11,53 @@ export default function LoginScreen(): JSX.Element {
   const router = useRouter();
   const { login, setLoading, isLoading } = useAuthStore();
 
-  const [identifier, setIdentifier] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [errors, setErrors] = useState<{ identifier?: string; password?: string }>({});
+  const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
 
   const validate = () => {
-    const newErrors: { identifier?: string; password?: string } = {};
-    if (!identifier.trim()) newErrors.identifier = "Phone number or name is required";
+    const newErrors: { email?: string; password?: string } = {};
+    if (!email.trim()) newErrors.email = "Email is required";
     if (!password) newErrors.password = "Password is required";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleLogin = async () => {
+    console.log('[Login] handleLogin: Starting login...');
     if (!validate()) return;
 
     setLoading(true);
 
     try {
       const response = await api.loginUser({
-        identifier: identifier.trim(),
+        identifier: email.trim().toLowerCase(),
         password,
       });
 
+      console.log('[Login] handleLogin: API response:', response.success ? 'Success' : 'Failed');
+
       if (response.success && response.data) {
+        console.log('[Login] handleLogin: User data:', response.data);
         login(response.data);
+        console.log('[Login] handleLogin: User logged in, navigating...');
+        
         if (response.data.userType === "admin") {
+          console.log('[Login] handleLogin: Redirecting to admin dashboard');
           router.replace("/(admin)/dashboard");
         } else if (response.data.userType === "collector") {
+          console.log('[Login] handleLogin: Redirecting to collector route');
           router.replace("/(collector)/route");
         } else {
+          console.log('[Login] handleLogin: Redirecting to resident home');
           router.replace("/(resident)/home");
         }
       } else {
-        Alert.alert("Login Failed", response.error || "Invalid credentials");
+        console.log('[Login] handleLogin: Login failed:', response.error);
+        Alert.alert("Login Failed", response.error || "Invalid email or password");
       }
     } catch (error) {
+      console.log('[Login] handleLogin: Error:', error);
       Alert.alert("Error", "Something went wrong. Please try again.");
     } finally {
       setLoading(false);
@@ -68,12 +79,13 @@ export default function LoginScreen(): JSX.Element {
 
         <View style={styles.form}>
           <Input
-            label="Phone Number or Name"
-            placeholder="Enter your phone or name"
-            value={identifier}
-            onChangeText={setIdentifier}
-            error={errors.identifier}
+            label="Email"
+            placeholder="Enter your email"
+            value={email}
+            onChangeText={setEmail}
+            error={errors.email}
             autoCapitalize="none"
+            keyboardType="email-address"
           />
 
           <Input
@@ -90,7 +102,9 @@ export default function LoginScreen(): JSX.Element {
 
         <View style={styles.demoHint}>
           <Text style={styles.demoText}>
-            Demo: Use "resident" or "collector" as username, and "demo123" as password
+            Demo: juan@email.com / demo123 (resident){"\n"}
+            pedro@basurasmart.com / demo123 (collector){"\n"}
+            admin@basurasmart.com / admin123 (admin)
           </Text>
         </View>
       </ScrollView>

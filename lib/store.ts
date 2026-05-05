@@ -1,6 +1,7 @@
 import { create } from "zustand";
+import { supabase } from "./supabase";
+import { api } from "./api";
 import type { User, AuthState, Route, CalendarDay, PickupSchedule, Report, ReportStatus, PointsTransaction, Reward, Announcement, CollectorIssue } from "./types";
-import { MOCK_ROUTE, MOCK_PICKUP_SCHEDULE, REWARDS, MOCK_ANNOUNCEMENTS, MOCK_REPORTS, USER_TYPES } from "./constants";
 
 interface AuthStore extends AuthState {
   login: (user: User) => void;
@@ -8,8 +9,11 @@ interface AuthStore extends AuthState {
   setLoading: (loading: boolean) => void;
   setOtpSentTo: (phone: string | null) => void;
   updateUser: (updates: Partial<User>) => void;
-  addPoints: (points: number, description: string) => void;
-  redeemPoints: (points: number, reward: Reward, description: string) => boolean;
+  addPoints: (points: number) => void;
+  deductPoints: (points: number) => void;
+  refreshUser: () => Promise<void>;
+  initializeAuth: () => Promise<void>;
+  setupAuthListener: () => () => void;
 }
 
 interface AppStore {
@@ -22,9 +26,10 @@ interface AppStore {
   currentMonth: number;
   currentYear: number;
   calendarDays: CalendarDay[];
+  schedules: PickupSchedule[];
   setSelectedDate: (date: Date) => void;
   setMonth: (month: number, year: number) => void;
-  generateCalendarDays: () => void;
+  generateCalendarDays: (schedules?: PickupSchedule[]) => void;
   getScheduleForDate: (date: Date) => PickupSchedule | undefined;
 
   isMenuOpen: boolean;
@@ -43,10 +48,15 @@ interface AppStore {
   addCollectorIssue: (issue: CollectorIssue) => void;
 
   latestAnnouncement: Announcement | null;
+  setLatestAnnouncement: (announcement: Announcement | null) => void;
   dismissAnnouncement: () => void;
+
+  loadAnnouncements: () => Promise<void>;
+  loadSchedule: (purok?: string) => Promise<void>;
+  loadReports: (userId?: string, isAdmin?: boolean) => Promise<void>;
 }
 
-const generateCalendarDaysForMonth = (month: number, year: number): CalendarDay[] => {
+const generateCalendarDaysForMonth = (month: number, year: number, schedules: PickupSchedule[] = []): CalendarDay[] => {
   const days: CalendarDay[] = [];
   const firstDay = new Date(year, month, 1);
   const lastDay = new Date(year, month + 1, 0);
@@ -66,13 +76,13 @@ const generateCalendarDaysForMonth = (month: number, year: number): CalendarDay[
   
   for (let date = 1; date <= lastDay.getDate(); date++) {
     const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(date).padStart(2, "0")}`;
-    const schedule = MOCK_PICKUP_SCHEDULE.find(s => s.date === dateStr);
+    const schedule = schedules.find(s => s.date === dateStr);
     
     days.push({
       date,
       month,
       year,
-      wasteType: schedule?.wasteType,
+      wasteType: schedule?.wasteType as CalendarDay['wasteType'],
       isToday: 
         date === today.getDate() &&
         month === today.getMonth() &&
@@ -87,23 +97,28 @@ const generateCalendarDaysForMonth = (month: number, year: number): CalendarDay[
 export const useAuthStore = create<AuthStore>((set, get) => ({
   user: null,
   isAuthenticated: false,
-  isLoading: false,
+  isLoading: true,
   otpSentTo: null,
 
   login: (user: User) =>
     set({
-      user: { ...user, points: 0 },
+      user,
       isAuthenticated: true,
       isLoading: false,
     }),
 
-  logout: () =>
+  logout: async () => {
+    console.log('[Store] logout: Starting...');
+    await api.logoutUser();
+    console.log('[Store] logout: Cleared state');
     set({
       user: null,
       isAuthenticated: false,
       isLoading: false,
       otpSentTo: null,
-    }),
+    });
+    console.log('[Store] logout: Complete');
+  },
 
   setLoading: (loading: boolean) =>
     set({ isLoading: loading }),
@@ -116,7 +131,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
       user: state.user ? { ...state.user, ...updates } : null,
     })),
 
-  addPoints: (points: number, description: string) =>
+  addPoints: (points: number) =>
     set((state) => {
       if (!state.user) return state;
       return {
@@ -127,23 +142,101 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
       };
     }),
 
-  redeemPoints: (points: number, reward: Reward, description: string) => {
-    const state = get();
-    if (!state.user || state.user.points < reward.pointsCost) {
-      return false;
+  deductPoints: (points: number) =>
+    set((state) => {
+      if (!state.user) return state;
+      return {
+        user: {
+          ...state.user,
+          points: Math.max(0, state.user.points - points),
+        },
+      };
+    }),
+
+  refreshUser: async () => {
+    const { user } = get();
+    if (user?.id) {
+      const response = await api.getUserDetails(user.id);
+      if (response.success && response.data) {
+        set({ user: response.data });
+      }
     }
-    set({
-      user: {
-        ...state.user,
-        points: state.user.points - reward.pointsCost,
-      },
+  },
+
+  initializeAuth: async () => {
+    console.log('[Store] initializeAuth: Starting...');
+    
+    const { user: existingUser, isAuthenticated: wasAuthenticated } = get();
+    if (existingUser && wasAuthenticated) {
+      console.log('[Store] initializeAuth: User already logged in, skipping...');
+      set({ isLoading: false });
+      return;
+    }
+    
+    set({ isLoading: true });
+    
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      console.log('[Store] initializeAuth: Session check:', session ? 'Session exists' : 'No session');
+      
+      if (session?.user) {
+        console.log('[Store] initializeAuth: Found user in session, fetching profile...');
+        const response = await api.getUserDetails(session.user.id);
+        console.log('[Store] initializeAuth: Profile response:', response.success ? 'Success' : 'Failed');
+        
+        if (response.success && response.data) {
+          console.log('[Store] initializeAuth: Setting user and authenticated');
+          set({
+            user: response.data,
+            isAuthenticated: true,
+            isLoading: false,
+          });
+        } else {
+          console.log('[Store] initializeAuth: Failed to get profile');
+          set({ isLoading: false });
+        }
+      } else {
+        console.log('[Store] initializeAuth: No session, not authenticated');
+        set({ isLoading: false });
+      }
+    } catch (error) {
+      console.log('[Store] initializeAuth: Error:', error);
+      set({ isLoading: false });
+    }
+  },
+  setupAuthListener: () => {
+    console.log('[Store] setupAuthListener: Setting up...');
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('[Store] Auth event:', event);
+      
+      if (event === 'SIGNED_OUT') {
+        console.log('[Store] User signed out, clearing state');
+        set({
+          user: null,
+          isAuthenticated: false,
+          isLoading: false,
+        });
+      } else if (event === 'TOKEN_REFRESHED' && session?.user) {
+        console.log('[Store] Token refreshed, syncing profile...');
+        const response = await api.getUserDetails(session.user.id);
+        if (response.success && response.data) {
+          set({
+            user: response.data,
+            isAuthenticated: true,
+          });
+        }
+      }
     });
-    return true;
+    
+    return () => {
+      console.log('[Store] cleanupAuthListener: Unsubscribing...');
+      subscription.unsubscribe();
+    };
   },
 }));
 
 export const useAppStore = create<AppStore>((set, get) => ({
-  currentRoute: MOCK_ROUTE,
+  currentRoute: null,
   setCurrentRoute: (route: Route | null) => set({ currentRoute: route }),
   
   completeStop: (stopId: string) =>
@@ -182,6 +275,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
   currentMonth: new Date().getMonth(),
   currentYear: new Date().getFullYear(),
   calendarDays: [],
+  schedules: [],
 
   setSelectedDate: (date: Date) => set({ selectedDate: date }),
 
@@ -190,15 +284,16 @@ export const useAppStore = create<AppStore>((set, get) => ({
     get().generateCalendarDays();
   },
 
-  generateCalendarDays: () => {
+  generateCalendarDays: (schedules: PickupSchedule[] = []) => {
     const { currentMonth, currentYear } = get();
-    const days = generateCalendarDaysForMonth(currentMonth, currentYear);
-    set({ calendarDays: days });
+    const days = generateCalendarDaysForMonth(currentMonth, currentYear, schedules);
+    set({ calendarDays: days, schedules });
   },
 
   getScheduleForDate: (date: Date): PickupSchedule | undefined => {
     const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
-    return MOCK_PICKUP_SCHEDULE.find(s => s.date === dateStr);
+    const { schedules } = get();
+    return schedules.find(s => s.date === dateStr);
   },
 
   isMenuOpen: false,
@@ -208,7 +303,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
   currentGuideIndex: 0,
   setGuideIndex: (index: number) => set({ currentGuideIndex: index }),
 
-  reports: MOCK_REPORTS,
+  reports: [],
   addReport: (report: Report) =>
     set((state) => ({
       reports: [report, ...state.reports],
@@ -227,8 +322,39 @@ export const useAppStore = create<AppStore>((set, get) => ({
       collectorIssues: [issue, ...state.collectorIssues],
     })),
 
-  latestAnnouncement: MOCK_ANNOUNCEMENTS[0] || null,
+  latestAnnouncement: null,
+  setLatestAnnouncement: (announcement: Announcement | null) => set({ latestAnnouncement: announcement }),
   dismissAnnouncement: () => set({ latestAnnouncement: null }),
+
+  loadAnnouncements: async () => {
+    console.log('[Store] loadAnnouncements: Fetching...');
+    const response = await api.getAnnouncements();
+    console.log('[Store] loadAnnouncements: Result:', response.success ? `Found ${response.data?.length} announcements` : response.error);
+    if (response.success && response.data && response.data.length > 0) {
+      set({ latestAnnouncement: response.data[0] });
+    }
+  },
+
+  loadSchedule: async (purok?: string) => {
+    console.log('[Store] loadSchedule: Fetching for purok:', purok || 'all');
+    const response = await api.getPickupSchedule(purok);
+    console.log('[Store] loadSchedule: Result:', response.success ? `Found ${response.data?.length} schedules` : response.error);
+    if (response.success && response.data) {
+      get().generateCalendarDays(response.data);
+    }
+  },
+
+  loadReports: async (userId?: string, isAdmin?: boolean) => {
+    const response = isAdmin 
+      ? await api.getAllReports()
+      : userId 
+        ? await api.getUserReports(userId)
+        : await api.getAllReports();
+    
+    if (response.success && response.data) {
+      set({ reports: response.data });
+    }
+  },
 }));
 
 useAppStore.getState().generateCalendarDays();

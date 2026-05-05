@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
+import * as ImagePicker from "expo-image-picker";
 import { Header, Card, Button, Input, Dropdown, SideMenu } from "@/components/ui";
 import { useAppStore, useAuthStore } from "@/lib/store";
 import { api } from "@/lib/api";
@@ -75,10 +76,12 @@ function ReportCard({ report }: { report: Report }): JSX.Element {
 
 export default function ReportScreen(): JSX.Element {
   const router = useRouter();
-  const { reports, addReport, setMenuOpen } = useAppStore();
+  const { user } = useAuthStore();
+  const { reports, addReport, setMenuOpen, loadReports } = useAppStore();
 
   const [showForm, setShowForm] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [formData, setFormData] = useState({
     purok: "",
     description: "",
@@ -89,6 +92,24 @@ export default function ReportScreen(): JSX.Element {
   const [location, setLocation] = useState<{ latitude: number; longitude: number } | null>(null);
   const [isLocating, setIsLocating] = useState(false);
 
+  useEffect(() => {
+    console.log('[Report] useEffect: Loading reports for user:', user?.id);
+    const loadUserReports = async () => {
+      setIsLoading(true);
+      try {
+        console.log('[Report] loadUserReports: Calling loadReports...');
+        await loadReports(user?.id);
+        console.log('[Report] loadUserReports: Complete');
+      } catch (error) {
+        console.error('[Report] loadUserReports: Error:', error);
+      } finally {
+        setIsLoading(false);
+        console.log('[Report] loadUserReports: Finished');
+      }
+    };
+    loadUserReports();
+  }, [user?.id]);
+
   const validateForm = () => {
     const errors: { purok?: string; description?: string } = {};
     if (!formData.purok) errors.purok = "Please select a purok";
@@ -97,11 +118,48 @@ export default function ReportScreen(): JSX.Element {
     return Object.keys(errors).length === 0;
   };
 
-  const handlePhotoPick = async () => {
+  const handlePhotoPick = async (useCamera: boolean = false) => {
     setIsPhotoUploading(true);
-    await new Promise((resolve) => setTimeout(resolve, 800));
-    setPhotoUri("mock://photo_" + Date.now());
-    setIsPhotoUploading(false);
+    
+    try {
+      if (useCamera) {
+        const cameraPermission = await ImagePicker.requestCameraPermissionsAsync();
+        if (!cameraPermission.granted) {
+          Alert.alert("Permission Required", "Camera permission is needed to take photos.");
+          return;
+        }
+        
+        const result = await ImagePicker.launchCameraAsync({
+          mediaTypes: ["images"],
+          allowsEditing: true,
+          aspect: [4, 3],
+          quality: 0.7,
+        });
+
+        if (!result.canceled && result.assets[0]) {
+          setPhotoUri(result.assets[0].uri);
+        }
+      } else {
+        const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (!permissionResult.granted) {
+          Alert.alert("Permission Required", "Photo library permission is needed.");
+          return;
+        }
+        
+        const result = await ImagePicker.launchImageLibraryAsync({
+          mediaTypes: ["images"],
+          allowsEditing: true,
+          aspect: [4, 3],
+          quality: 0.7,
+        });
+
+        if (!result.canceled && result.assets[0]) {
+          setPhotoUri(result.assets[0].uri);
+        }
+      }
+    } finally {
+      setIsPhotoUploading(false);
+    }
   };
 
   const handleLocationGet = async () => {
@@ -119,13 +177,17 @@ export default function ReportScreen(): JSX.Element {
     await new Promise((resolve) => setTimeout(resolve, 1500));
 
     try {
+      if (!user?.id) {
+        Alert.alert("Error", "You must be logged in to submit a report");
+        return;
+      }
       const response = await api.createReport({
         purok: formData.purok,
         description: formData.description.trim(),
         photoUri: photoUri || undefined,
         latitude: location?.latitude,
         longitude: location?.longitude,
-      });
+      }, user.id);
 
       if (response.success && response.data) {
         addReport(response.data);
@@ -206,26 +268,38 @@ export default function ReportScreen(): JSX.Element {
                 <View style={styles.attachmentSection}>
                   <Text style={styles.attachmentLabel}>Attachments (Optional)</Text>
 
-                  <TouchableOpacity
-                    onPress={handlePhotoPick}
-                    disabled={isPhotoUploading}
-                    style={styles.attachmentButton}
-                  >
-                    {isPhotoUploading ? (
-                      <ActivityIndicator color={COLORS.primary[500]} />
-                    ) : photoUri ? (
-                      <View style={styles.photoPreviewContainer}>
-                        <Image source={{ uri: photoUri }} style={styles.photoPreview} />
-                        <View style={styles.uploadedOverlay}>
-                          <Text style={styles.uploadedText}>Photo Ready</Text>
+                  <View style={styles.photoButtonsRow}>
+                    <TouchableOpacity
+                      onPress={() => handlePhotoPick(true)}
+                      disabled={isPhotoUploading}
+                      style={[styles.attachmentButton, styles.photoButton]}
+                    >
+                      {isPhotoUploading ? (
+                        <ActivityIndicator color={COLORS.primary[500]} />
+                      ) : photoUri ? (
+                        <View style={styles.photoPreviewContainer}>
+                          <Image source={{ uri: photoUri }} style={styles.photoPreview} />
+                          <View style={styles.uploadedOverlay}>
+                            <Text style={styles.uploadedText}>Photo Ready</Text>
+                          </View>
                         </View>
-                      </View>
-                    ) : (
+                      ) : (
+                        <View style={styles.attachmentButtonContent}>
+                          <Text style={styles.attachmentButtonText}>Take Photo</Text>
+                        </View>
+                      )}
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      onPress={() => handlePhotoPick(false)}
+                      disabled={isPhotoUploading}
+                      style={[styles.attachmentButton, styles.photoButton]}
+                    >
                       <View style={styles.attachmentButtonContent}>
-                        <Text style={styles.attachmentButtonText}>Add Photo</Text>
+                        <Text style={styles.attachmentButtonText}>Choose Photo</Text>
                       </View>
-                    )}
-                  </TouchableOpacity>
+                    </TouchableOpacity>
+                  </View>
 
                   <TouchableOpacity
                     onPress={handleLocationGet}
@@ -339,6 +413,13 @@ const styles = StyleSheet.create({
   },
   attachmentSection: {
     marginTop: 8,
+  },
+  photoButtonsRow: {
+    flexDirection: "row",
+    gap: 12,
+  },
+  photoButton: {
+    flex: 1,
   },
   attachmentLabel: {
     fontSize: 14,

@@ -37,12 +37,12 @@ export function SideMenu(): JSX.Element {
 
   const handleRewards = () => {
     setMenuOpen(false);
-    router.replace("/(resident)/rewards" as any);
+    router.replace("/(resident)/rewards");
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     setMenuOpen(false);
-    logout();
+    await logout();
     router.replace("/");
   };
 
