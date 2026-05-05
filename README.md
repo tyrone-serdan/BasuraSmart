@@ -1,55 +1,89 @@
 # BasuraSmart
 
-A waste management mobile application built with Expo and React Native.
+A waste management mobile application built with Expo, React Native, and Supabase.
 
 ## Overview
 
-BasuraSmart is designed for **Barangay Obrero, Butuan City** to help communities manage their waste collection more efficiently. The app provides a streamlined experience for both residents and garbage collectors, making it easier to track pickup schedules, view routes on an interactive map, and ensure proper waste segregation.
+BasuraSmart is designed for **Barangay Obrero, Butuan City** to help communities manage their waste collection more efficiently. The app provides a streamlined experience for residents, garbage collectors, and barangay officials.
 
 ## Features
 
 ### For Residents
 - View monthly pickup schedule calendar
-- Get reminders for upcoming waste collection days
-- Color-coded waste type indicators (biodegradable, non-biodegradable, recyclables)
-- Access to waste segregation guidelines
+- Report illegal dumping with photo & location
+- Earn points for proper waste segregation
+- Redeem points for load credits (GLOBE, SMART, TNT)
+- View announcements from barangay
 
 ### For Collectors
 - View assigned pickup routes with all stops
-- Track completed and pending stops
-- Mark individual pickups as complete
-- See route progress in real-time
+- Track completed and pending stops on map
+- Mark pickups as complete
+- Report issues during collection
+
+### For Admins
+- Dashboard with statistics
+- Manage reports (pending, investigating, resolved)
+- View all pickup schedules
 
 ### Authentication
-- Phone-based registration and login
+- Email-based registration and login
 - OTP verification for account security
-- Secure session management with Zustand
+- Role-based access (resident/collector/admin)
+- Supabase Auth for secure sessions
 
-### Interactive Map
-- Powered by **OpenStreetMap** (no API key required)
-- Custom markers showing stop status (completed/pending)
-- Route polylines connecting stops in a circular pattern
-- Pan and zoom functionality
-- Works offline-ready base tiles
+## Supabase Integration
+
+This app uses **Supabase** as the backend:
+
+- **Authentication:** Email/password login with OTP verification
+- **Database:** PostgreSQL with Row Level Security (RLS)
+- **Storage:** For report photos (optional)
+
+### Supabase Tables
+
+The app uses the following tables:
+- `profiles` - User profiles (name, purok, userType, points)
+- `pickup_schedules` - Waste collection schedule
+- `routes` - Collector routes
+- `route_stops` - Individual stops on routes
+- `reports` - Illegal dumping reports
+- `announcements` - Barangay announcements
+- `rewards` - Redeemable load credits
+- `points_transactions` - Points history
 
 ## Tech Stack
 
 - **Framework:** Expo SDK 52 with Expo Router
 - **Language:** TypeScript
+- **Backend:** Supabase (PostgreSQL + Auth)
 - **State Management:** Zustand
-- **Styling:** React Native StyleSheet
-- **Navigation:** Expo Router (file-based routing)
 - **Maps:** React Native WebView with Leaflet.js + OpenStreetMap
-- **UI Components:** Custom components with React Native SVG
 
 ## Getting Started
 
 ### Prerequisites
 
 - Node.js 18+
-- npm or yarn
-- Android Studio (for Android development)
-- Xcode (for iOS development, macOS only)
+- Supabase project (see setup below)
+- Android Studio or Xcode
+
+### Supabase Setup
+
+1. Create a Supabase project at [supabase.com](https://supabase.com)
+2. Run the SQL in `SUPABASE_SETUP.sql` in your Supabase SQL Editor
+3. Add your credentials to `app.json`:
+
+```json
+{
+  "expo": {
+    "extra": {
+      "supabaseUrl": "https://your-project.supabase.co",
+      "supabaseAnonKey": "your-anon-key"
+    }
+  }
+}
+```
 
 ### Installation
 
@@ -57,34 +91,50 @@ BasuraSmart is designed for **Barangay Obrero, Butuan City** to help communities
 # Install dependencies
 npm install
 
-# Generate native folders (required for WebView)
+# Generate native folders
 npx expo prebuild
 
-# Start the development server
+# Start development server
 npm start
 
 # Run on Android
 npx expo run:android
-
-# Run on iOS
-npx expo run:ios
 ```
 
-### Note on Native Build
+## Database Setup SQL
 
-This project uses `react-native-webview` for the interactive map feature. Running `npx expo prebuild` is required to generate the native Android/iOS folders before building.
+Run this in your Supabase SQL Editor to seed routes:
+
+```sql
+-- Routes
+INSERT INTO routes (name, date, total_stops, completed_stops, status) 
+VALUES ('Tuesday Route - Purok 1-12', '2026-05-08', 12, 4, 'pending');
+
+-- Route Stops (run after routes insert)
+INSERT INTO route_stops (route_id, purok, address, latitude, longitude, status, waste_type) VALUES
+((SELECT id FROM routes WHERE name = 'Tuesday Route - Purok 1-12' LIMIT 1), 'Purok 1', '123 Centro St', 8.964216, 125.535944, 'completed', 'biodegradable'),
+((SELECT id FROM routes WHERE name = 'Tuesday Route - Purok 1-12' LIMIT 1), 'Purok 2', '201 Main Rd', 8.963616, 125.537344, 'completed', 'biodegradable'),
+((SELECT id FROM routes WHERE name = 'Tuesday Route - Purok 1-12' LIMIT 1), 'Purok 3', '301 Village Way', 8.962216, 125.537944, 'completed', 'biodegradable'),
+((SELECT id FROM routes WHERE name = 'Tuesday Route - Purok 1-12' LIMIT 1), 'Purok 4', '401 Church St', 8.960816, 125.537344, 'completed', 'biodegradable'),
+((SELECT id FROM routes WHERE name = 'Tuesday Route - Purok 1-12' LIMIT 1), 'Purok 5', '501 Market Ave', 8.960216, 125.535944, 'pending', 'non-biodegradable'),
+((SELECT id FROM routes WHERE name = 'Tuesday Route - Purok 1-12' LIMIT 1), 'Purok 6', '601 School Lane', 8.959816, 125.534544, 'pending', 'non-biodegradable'),
+((SELECT id FROM routes WHERE name = 'Tuesday Route - Purok 1-12' LIMIT 1), 'Purok 7', '701 Health Center Rd', 8.962216, 125.533944, 'pending', 'recyclables'),
+((SELECT id FROM routes WHERE name = 'Tuesday Route - Purok 1-12' LIMIT 1), 'Purok 8', '801 Basketball Ct', 8.963616, 125.534544, 'pending', 'recyclables'),
+((SELECT id FROM routes WHERE name = 'Tuesday Route - Purok 1-12' LIMIT 1), 'Purok 9', '901 Day Care St', 8.964716, 125.534944, 'pending', NULL),
+((SELECT id FROM routes WHERE name = 'Tuesday Route - Purok 1-12' LIMIT 1), 'Purok 10', '1001 Chapel Road', 8.964716, 125.536944, 'pending', NULL),
+((SELECT id FROM routes WHERE name = 'Tuesday Route - Purok 1-12' LIMIT 1), 'Purok 11', '1101 Municipal Hall', 8.959716, 125.534944, 'pending', NULL),
+((SELECT id FROM routes WHERE name = 'Tuesday Route - Purok 1-12' LIMIT 1), 'Purok 12', '1201 Plaza Complex', 8.959716, 125.536944, 'pending', NULL);
+```
 
 ## Demo Credentials
 
-The app uses mock data for demonstration purposes:
+Create users in Supabase Auth, then their profiles will be created on first login.
 
-| User Type | Username | Password |
-|-----------|----------|----------|
-| Resident | resident | demo123 |
-| Collector | collector | demo123 |
-
-### OTP Code
-Use `123456` for OTP verification during registration.
+| User Type | Email | Password |
+|----------|-------|----------|
+| Resident | juan@email.com | demo123 |
+| Collector | pedro@basurasmart.com | demo123 |
+| Admin | admin@basurasmart.com | admin123 |
 
 ## Project Structure
 
@@ -92,48 +142,26 @@ Use `123456` for OTP verification during registration.
 basurasmart/
 ├── app/                    # Expo Router screens
 │   ├── (auth)/           # Authentication screens
-│   │   ├── login.tsx
-│   │   ├── register.tsx
-│   │   ├── otp.tsx
-│   │   └── details.tsx
 │   ├── (resident)/       # Resident screens
-│   │   └── home.tsx
-│   ├── (collector)/      # Collector screens
-│   │   └── route.tsx
-│   ├── _layout.tsx       # Root layout
-│   └── index.tsx         # Landing page
+│   ├── (collector)/     # Collector screens
+│   └── (admin)/         # Admin screens
 ├── components/           # Reusable components
-│   ├── ui/              # UI components (Button, Card, Input, etc.)
+│   ├── ui/              # UI components
 │   ├── illustrations/   # SVG illustrations
-│   └── map/             # Map components (RouteMap with OSM)
-├── lib/                  # Utilities and logic
-│   ├── api.ts           # API functions (mock)
-│   ├── constants.ts     # App constants, colors, MAP_CONFIG
-│   ├── store.ts         # Zustand stores
-│   ├── styles.ts        # Shared styles
-│   └── types.ts         # TypeScript types
-└── android/             # Native Android folder (generated by prebuild)
+│   └── map/             # Map components
+├── lib/                  # Core logic
+│   ├── api.ts           # Supabase API functions
+│   ├── supabase.ts      # Supabase client
+│   ├── store.ts        # Zustand stores
+│   └── types.ts        # TypeScript types
+├── SUPABASE_SETUP.sql   # Database schema
+└── app.json            # Expo config with Supabase keys
 ```
 
 ## Map Configuration
 
-The map is configured for **Barangay Obrero, Butuan City** with coordinates:
+The map is configured for **Barangay Obrero, Butuan City**:
 
 - **Center:** `8.962216, 125.535944`
 - **Zoom Level:** 15
 - **Provider:** OpenStreetMap
-- **Route Pattern:** Circular stops encircling the center point
-
-To adjust the map region or stops, edit `lib/constants.ts`:
-
-```typescript
-export const MAP_CONFIG = {
-  defaultRegion: {
-    latitude: 8.962216,
-    longitude: 125.535944,
-    latitudeDelta: 0.015,
-    longitudeDelta: 0.015,
-  },
-  zoomLevel: 15,
-};
-```
