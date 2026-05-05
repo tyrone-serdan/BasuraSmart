@@ -34,7 +34,7 @@ export default function OTPScreen(): JSX.Element {
     setLoading(true);
     setError("");
     try {
-      const response = await api.verifyOtp({ phone: otpSentTo || "", code: otp });
+      const response = await api.verifyEmailOtp(otpSentTo || "", otp);
       if (response.success) {
         router.push("/(auth)/details");
       } else {

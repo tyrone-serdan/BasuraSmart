@@ -161,4 +161,5 @@ export interface CollectorIssue {
   latitude?: number;
   longitude?: number;
   createdAt: string;
+  routeId?: string;
 }

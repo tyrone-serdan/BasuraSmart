@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import {
   View,
   Text,
@@ -10,14 +10,34 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Header, Card, Button } from "@/components/ui";
 import { useAppStore, useAuthStore } from "@/lib/store";
+import { api } from "@/lib/api";
 import { COLORS, commonStyles } from "@/lib/styles";
 import { USER_TYPES } from "@/lib/constants";
 import type { Report, ReportStatus } from "@/lib/types";
 
 export default function AdminDashboard(): JSX.Element {
   const { user, logout } = useAuthStore();
-  const { reports, updateReportStatus, collectorIssues } = useAppStore();
+  const { reports, updateReportStatus, collectorIssues, loadReports, setReports } = useAppStore();
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    console.log('[AdminDashboard] useEffect: Loading data...');
+    const loadData = async () => {
+      setIsLoading(true);
+      try {
+        console.log('[AdminDashboard] loadData: Calling loadReports...');
+        await loadReports(undefined, true);
+        console.log('[AdminDashboard] loadData: Complete');
+      } catch (error) {
+        console.error('[AdminDashboard] loadData: Error:', error);
+      } finally {
+        setIsLoading(false);
+        console.log('[AdminDashboard] loadData: Finished loading');
+      }
+    };
+    loadData();
+  }, []);
 
   const stats = useMemo(() => {
     const totalReports = reports.length;

@@ -8,7 +8,7 @@ import { COLORS, commonStyles } from "@/lib/styles";
 
 export default function RegisterScreen(): JSX.Element {
   const router = useRouter();
-  const { setLoading, setOtpSentTo, isLoading } = useAuthStore();
+  const { setLoading, isLoading } = useAuthStore();
   
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -36,13 +36,19 @@ export default function RegisterScreen(): JSX.Element {
     try {
       const response = await api.registerUser({
         name: name.trim(),
-        email: email.trim(),
+        email: email.trim().toLowerCase(),
         phone: phone.trim(),
         password,
       });
+      
       if (response.success) {
-        setOtpSentTo(phone.trim());
-        router.push("/(auth)/otp");
+        Alert.alert(
+          "Registration Successful!", 
+          "Please check your email to confirm your account. After confirming, you can log in.",
+          [
+            { text: "Go to Login", onPress: () => router.replace("/(auth)/login") }
+          ]
+        );
       } else {
         Alert.alert("Registration Failed", response.error || "Please try again");
       }
@@ -64,7 +70,7 @@ export default function RegisterScreen(): JSX.Element {
 
         <View style={styles.form}>
           <Input label="Name" placeholder="Enter your full name" value={name} onChangeText={setName} error={errors.name} autoCapitalize="words" />
-          <Input label="Email" placeholder="Enter your email" value={email} onChangeText={setEmail} error={errors.email} keyboardType="email-address" />
+          <Input label="Email" placeholder="Enter your email" value={email} onChangeText={setEmail} error={errors.email} keyboardType="email-address" autoCapitalize="none" />
           <Input label="Phone Number" placeholder="e.g., 09123456789" value={phone} onChangeText={setPhone} error={errors.phone} keyboardType="phone-pad" />
           <Input label="Password" placeholder="Create a password" value={password} onChangeText={setPassword} error={errors.password} secureTextEntry />
           <Input label="Confirm Password" placeholder="Confirm your password" value={confirmPassword} onChangeText={setConfirmPassword} error={errors.confirmPassword} secureTextEntry />

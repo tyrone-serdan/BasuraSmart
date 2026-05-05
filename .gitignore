@@ -12,3 +12,6 @@ expo-env.d.ts
 # @end expo-cli
 
 basurasmart.md
+setup-database.ts
+SUPABASE_SETUP.sql
+.env

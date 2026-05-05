@@ -1,7 +1,7 @@
 import React, { useMemo, useRef } from "react";
 import { StyleSheet, View, Text } from "react-native";
 import { WebView } from "react-native-webview";
-import { MOCK_ROUTE, MAP_CONFIG, COLORS } from "@/lib/constants";
+import { MAP_CONFIG, COLORS } from "@/lib/constants";
 import type { RouteStop } from "@/lib/types";
 
 interface RouteMapProps {
@@ -11,11 +11,19 @@ interface RouteMapProps {
 }
 
 export function RouteMap({
-  stops = MOCK_ROUTE.stops,
+  stops = [],
   showRoute = true,
   height = 350,
 }: RouteMapProps): JSX.Element {
   const webViewRef = useRef<WebView>(null);
+
+  if (!stops || stops.length === 0) {
+    return (
+      <View style={[styles.container, styles.emptyContainer, { height }]}>
+        <Text style={styles.emptyText}>No route stops available</Text>
+      </View>
+    );
+  }
 
   const completedStops = stops.filter((s) => s.status === "completed");
   const pendingStops = stops.filter((s) => s.status === "pending");
@@ -125,6 +133,15 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     overflow: "hidden",
     backgroundColor: "#e5e7eb",
+  },
+  emptyContainer: {
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#f3f4f6",
+  },
+  emptyText: {
+    color: "#6b7280",
+    fontSize: 16,
   },
   map: {
     flex: 1,

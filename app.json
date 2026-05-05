@@ -36,7 +36,9 @@
       },
       "eas": {
         "projectId": "6cea49e2-1edf-4d7b-9887-16df5059c5a5"
-      }
+      },
+      "supabaseUrl": "https://njglygywsflqzjogrlkv.supabase.co",
+      "supabaseAnonKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5qZ2x5Z3l3c2ZscXpqb2dybGt2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc5MTgwNzEsImV4cCI6MjA5MzQ5NDA3MX0.Cw4G1zZ8IxGDPjYfC93wktamMHVR9kJgy48V4e2XYQI"
     }
   }
 }

@@ -110,25 +110,25 @@ export const MAP_CONFIG = {
 // Center: 8.962216, 125.535944 | Radius: ~0.002 degrees (~200m)
 export const MOCK_ROUTE: Route = {
   id: "route-1",
-  name: "Tuesday Route - Purok 1-3",
-  date: "2026-04-15",
+  name: "Tuesday Route - Purok 1-12",
+  date: "2026-05-08",
   totalStops: 12,
   completedStops: 4,
   stops: [
-    // Completed stops - encircling center
-    { id: "s1", purok: "Purok 1", address: "123 Centro St", latitude: 8.962216 + 0.0020, longitude: 125.535944, status: "completed", wasteType: "biodegradable" },
-    { id: "s2", purok: "Purok 1", address: "125 Centro St", latitude: 8.962216 + 0.0014, longitude: 125.535944 + 0.0014, status: "completed", wasteType: "biodegradable" },
-    { id: "s3", purok: "Purok 1", address: "127 Centro St", latitude: 8.962216, longitude: 125.535944 + 0.0020, status: "completed", wasteType: "biodegradable" },
-    { id: "s4", purok: "Purok 1", address: "129 Centro St", latitude: 8.962216 - 0.0014, longitude: 125.535944 + 0.0014, status: "completed", wasteType: "biodegradable" },
-    // Pending stops - continuing the circle
-    { id: "s5", purok: "Purok 2", address: "200 Upper St", latitude: 8.962216 - 0.0020, longitude: 125.535944, status: "pending", wasteType: "non-biodegradable" },
-    { id: "s6", purok: "Purok 2", address: "202 Upper St", latitude: 8.962216 - 0.0014, longitude: 125.535944 - 0.0014, status: "pending", wasteType: "non-biodegradable" },
-    { id: "s7", purok: "Purok 2", address: "204 Upper St", latitude: 8.962216, longitude: 125.535944 - 0.0020, status: "pending", wasteType: "recyclables" },
-    { id: "s8", purok: "Purok 3", address: "300 Lower St", latitude: 8.962216 + 0.0014, longitude: 125.535944 - 0.0014, status: "pending", wasteType: "recyclables" },
-    { id: "s9", purok: "Purok 3", address: "302 Lower St", latitude: 8.962216 + 0.0025, longitude: 125.535944 - 0.0010, status: "pending" },
-    { id: "s10", purok: "Purok 3", address: "304 Lower St", latitude: 8.962216 + 0.0025, longitude: 125.535944 + 0.0010, status: "pending" },
-    { id: "s11", purok: "Purok 3", address: "306 Lower St", latitude: 8.962216 - 0.0025, longitude: 125.535944 - 0.0010, status: "pending" },
-    { id: "s12", purok: "Purok 3", address: "308 Lower St", latitude: 8.962216 - 0.0025, longitude: 125.535944 + 0.0010, status: "pending" },
+    // Completed stops
+    { id: "s1", purok: "Purok 1", address: "123 Centro St", latitude: 8.964216, longitude: 125.535944, status: "completed", wasteType: "biodegradable" },
+    { id: "s2", purok: "Purok 2", address: "201 Main Rd", latitude: 8.963616, longitude: 125.537344, status: "completed", wasteType: "biodegradable" },
+    { id: "s3", purok: "Purok 3", address: "301 Village Way", latitude: 8.962216, longitude: 125.537944, status: "completed", wasteType: "biodegradable" },
+    { id: "s4", purok: "Purok 4", address: "401 Church St", latitude: 8.960816, longitude: 125.537344, status: "completed", wasteType: "biodegradable" },
+    // Pending stops
+    { id: "s5", purok: "Purok 5", address: "501 Market Ave", latitude: 8.960216, longitude: 125.535944, status: "pending", wasteType: "non-biodegradable" },
+    { id: "s6", purok: "Purok 6", address: "601 School Lane", latitude: 8.959816, longitude: 125.534544, status: "pending", wasteType: "non-biodegradable" },
+    { id: "s7", purok: "Purok 7", address: "701 Health Center Rd", latitude: 8.962216, longitude: 125.533944, status: "pending", wasteType: "recyclables" },
+    { id: "s8", purok: "Purok 8", address: "801 Basketball Ct", latitude: 8.963616, longitude: 125.534544, status: "pending", wasteType: "recyclables" },
+    { id: "s9", purok: "Purok 9", address: "901 Day Care St", latitude: 8.964716, longitude: 125.534944, status: "pending" },
+    { id: "s10", purok: "Purok 10", address: "1001 Chapel Road", latitude: 8.964716, longitude: 125.536944, status: "pending" },
+    { id: "s11", purok: "Purok 11", address: "1101 Municipal Hall", latitude: 8.959716, longitude: 125.534944, status: "pending" },
+    { id: "s12", purok: "Purok 12", address: "1201 Plaza Complex", latitude: 8.959716, longitude: 125.536944, status: "pending" },
   ],
 };
 

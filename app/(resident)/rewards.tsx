@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import {
   View,
   Text,
@@ -12,8 +12,9 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Header, Card, Button, SideMenu } from "@/components/ui";
 import { useAppStore, useAuthStore } from "@/lib/store";
+import { api } from "@/lib/api";
 import { COLORS, commonStyles } from "@/lib/styles";
-import { REWARDS, REWARD_NETWORKS } from "@/lib/constants";
+import { REWARD_NETWORKS } from "@/lib/constants";
 import type { Reward, RewardNetwork } from "@/lib/types";
 
 const SCREEN_WIDTH = Dimensions.get("window").width;
@@ -72,13 +73,38 @@ function RewardCard({
 
 export default function RewardsScreen(): JSX.Element {
   const router = useRouter();
-  const { user, redeemPoints } = useAuthStore();
+  const { user, refreshUser, deductPoints } = useAuthStore();
   const { setMenuOpen } = useAppStore();
   const [isRedeeming, setIsRedeeming] = useState<string | null>(null);
+  const [rewards, setRewards] = useState<Reward[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    console.log('[Rewards] useEffect: Loading rewards...');
+    const loadRewards = async () => {
+      setIsLoading(true);
+      try {
+        console.log('[Rewards] loadRewards: Calling API...');
+        const response = await api.getRewards();
+        console.log('[Rewards] loadRewards: Response:', response.success ? 'Success' : 'Failed');
+        
+        if (response.success && response.data) {
+          console.log('[Rewards] loadRewards: Found', response.data.length, 'rewards');
+          setRewards(response.data);
+        }
+      } catch (error) {
+        console.error('[Rewards] loadRewards: Error:', error);
+      } finally {
+        setIsLoading(false);
+        console.log('[Rewards] loadRewards: Complete');
+      }
+    };
+    loadRewards();
+  }, []);
 
   const currentPoints = user?.points || 0;
 
-  const handleRedeem = (reward: Reward) => {
+  const handleRedeem = async (reward: Reward) => {
     Alert.alert(
       "Confirm Redemption",
       `Redeem ${reward.pointsCost} points for PHP ${reward.amount} ${reward.network} load?`,
@@ -86,24 +112,25 @@ export default function RewardsScreen(): JSX.Element {
         { text: "Cancel", style: "cancel" },
         {
           text: "Confirm",
-          onPress: () => {
+          onPress: async () => {
+            if (!user?.id) return;
             setIsRedeeming(reward.id);
-            setTimeout(() => {
-              const success = redeemPoints(
-                reward.pointsCost,
-                reward,
-                `Redeemed for PHP ${reward.amount} ${reward.network} load`
-              );
-              setIsRedeeming(null);
-              if (success) {
+            try {
+              const response = await api.redeemReward(user.id, reward);
+              if (response.success) {
+                await refreshUser();
                 Alert.alert(
                   "Redemption Successful",
                   `Your PHP ${reward.amount} ${reward.network} load will be sent to your registered phone number within 24-48 hours.`
                 );
               } else {
-                Alert.alert("Error", "Failed to redeem. Please try again.");
+                Alert.alert("Error", response.error || "Failed to redeem. Please try again.");
               }
-            }, 500);
+            } catch (error) {
+              Alert.alert("Error", "Failed to redeem. Please try again.");
+            } finally {
+              setIsRedeeming(null);
+            }
           },
         },
       ]
@@ -128,7 +155,7 @@ export default function RewardsScreen(): JSX.Element {
         </Card>
 
         <View style={styles.rewardsGrid}>
-          {REWARDS.map((reward) => (
+          {rewards.map((reward) => (
             <RewardCard
               key={reward.id}
               reward={reward}

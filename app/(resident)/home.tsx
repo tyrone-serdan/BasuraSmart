@@ -38,6 +38,7 @@ function CalendarCell({ day, onPress }: { day: CalendarDay; onPress: () => void 
 }
 
 export default function ResidentHomeScreen(): JSX.Element {
+  console.log('[HomeScreen] Rendering!');
   const { user } = useAuthStore();
   const {
     calendarDays,
@@ -52,7 +53,32 @@ export default function ResidentHomeScreen(): JSX.Element {
     setMenuOpen,
     latestAnnouncement,
     dismissAnnouncement,
+    loadAnnouncements,
+    loadSchedule,
   } = useAppStore();
+
+  console.log('[HomeScreen] User:', user?.name);
+  const [isLoading, setIsLoading] = React.useState(true);
+
+  useEffect(() => {
+    console.log('[Home] useEffect: Loading data, user purok:', user?.purok);
+    const loadData = async () => {
+      setIsLoading(true);
+      try {
+        await Promise.all([
+          loadAnnouncements(),
+          loadSchedule(user?.purok)
+        ]);
+        console.log('[Home] useEffect: Data loaded successfully');
+      } catch (error) {
+        console.error('[Home] useEffect: Error loading home data:', error);
+      } finally {
+        setIsLoading(false);
+        console.log('[Home] useEffect: Loading complete');
+      }
+    };
+    loadData();
+  }, [user?.purok]);
 
   useEffect(() => {
     generateCalendarDays();
